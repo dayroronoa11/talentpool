@@ -4,7 +4,6 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
 
-@st.cache_resource()
 def fetch_data_talent():
     secret_info = st.secrets["sheets"]
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -12,18 +11,22 @@ def fetch_data_talent():
     client = gspread.authorize(creds)
     spreadsheet = client.open('Talent Pool Database')
     sheet = spreadsheet.sheet1
-    data = sheet.get_all_records()
+
+    # Specify expected headers in case there are duplicates in the actual sheet
+    expected_headers = ["name", "email", "universitas", "major", "whatsapp", "linkedin", "instagram", "cv", "code", "portofolio", "Status"]
+    
+    data = sheet.get_all_records(expected_headers=expected_headers)
+
     if not data:
         st.error("No data found in the sheet.")
         return pd.DataFrame()
 
     df_talent = pd.DataFrame(data)
 
-    required_columns = ["name", "email", "universitas", "major", "whatsapp", "linkedin", "instagram", "cv", "code", "portofolio", "Status"]
-    df_talent = df_talent[required_columns]
+    # Ensure the DataFrame only contains the required columns
+    df_talent = df_talent[expected_headers]
 
     return df_talent
-
 
 def update_status(index, new_status):
     secret_info = st.secrets["sheets"]
@@ -88,6 +91,11 @@ for index, row in page_data.iterrows():
         if col_name == "Status":
             # Editable status dropdown
             current_status = row[col_name]
+            
+            # Ensure current_status is valid or set it to a default status if invalid
+            if current_status not in statuses:
+                current_status = "Waiting"  # Default status
+
             new_status = cols[i].selectbox(f"Status for {row_index}", statuses, index=statuses.index(current_status), key=f"status_{index}")
             if new_status != current_status:
                 update_status(index, new_status)
