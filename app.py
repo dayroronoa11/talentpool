@@ -14,7 +14,7 @@ def fetch_data_talent():
 
     # Specify expected headers in case there are duplicates in the actual sheet
     expected_headers = ["name", "email", "universitas", "major", "whatsapp", "linkedin", "instagram", "cv", "code", "portofolio", "Status"]
-    
+
     data = sheet.get_all_records(expected_headers=expected_headers)
 
     if not data:
@@ -36,10 +36,16 @@ def update_status(index, new_status):
     spreadsheet = client.open('Talent Pool Database')
     sheet = spreadsheet.sheet1
 
-    # Find the status column index
-    status_col = len(sheet.row_values(1)) + 1
-    sheet.update_cell(1, status_col, "Status")  # Add header if not present
-    sheet.update_cell(index + 2, status_col, new_status)  # Update row
+    # Find the column index for "Status"
+    headers = sheet.row_values(1)  # Get the header row
+    if "Status" not in headers:
+        st.error("No 'Status' column found in the spreadsheet.")
+        return
+
+    status_col = headers.index("Status") + 1  # Convert to 1-based index
+
+    # Update the corresponding cell
+    sheet.update_cell(index + 2, status_col, new_status)  # `index + 2` accounts for header and zero-indexing
 
 
 st.set_page_config(layout="wide")
@@ -67,23 +73,30 @@ for col, selected_value in selected_filters.items():
 # Columns to display in the editable table
 editable_columns = ["name", "email", "universitas", "major", "whatsapp", "Status"]
 
-# Pagination setup
-page_size = 10  # Number of rows per page
-total_pages = (len(filtered_df) // page_size) + (1 if len(filtered_df) % page_size != 0 else 0)
-page_number = st.selectbox("Select Page", list(range(1, total_pages + 1)))
-
-# Get the data for the current page
-start_idx = (page_number - 1) * page_size
-end_idx = start_idx + page_size
-page_data = filtered_df.iloc[start_idx:end_idx]
-
-statuses = ["Accepted", "Waiting", "Rejected"]
+# Status options
+statuses = ["Open to Work", "Process in Unit", "Offering", "Hired"]
 
 # Editable table layout
 st.subheader("Editable Table")
 
-for index, row in page_data.iterrows():
-    cols = st.columns(len(editable_columns) + 2)  # +2 for LinkedIn and CV buttons
+# Add a download button for the filtered data
+if not filtered_df.empty:
+    # Convert the filtered DataFrame to CSV
+    csv_data = filtered_df.to_csv(index=False)
+    
+    # Add the download button
+    st.download_button(
+        label="📥 Download Filtered Data",
+        data=csv_data,
+        file_name="filtered_talent_data.csv",
+        mime="text/csv",
+    )
+else:
+    st.info("No data available to download.")
+
+
+for index, row in filtered_df.iterrows():
+    cols = st.columns(len(editable_columns) + 1)  # +1 for the links column
     row_index = row["name"]  # Use name as the row identifier
 
     # Display columns with editable fields
@@ -91,10 +104,10 @@ for index, row in page_data.iterrows():
         if col_name == "Status":
             # Editable status dropdown
             current_status = row[col_name]
-            
+
             # Ensure current_status is valid or set it to a default status if invalid
             if current_status not in statuses:
-                current_status = "Waiting"  # Default status
+                current_status = "Open to Work"  # Default status
 
             new_status = cols[i].selectbox(f"Status for {row_index}", statuses, index=statuses.index(current_status), key=f"status_{index}")
             if new_status != current_status:
@@ -105,12 +118,11 @@ for index, row in page_data.iterrows():
             # Display other fields as text
             cols[i].write(row[col_name])
 
-    # LinkedIn button
+    # Display hyperlinks for LinkedIn and CV
+    links = []
     if pd.notnull(row["linkedin"]):
-        if cols[-2].button("🔗 LinkedIn", key=f"linkedin_{index}"):
-            st.markdown(f"[View LinkedIn Profile]({row['linkedin']})", unsafe_allow_html=True)
-
-    # CV button
+        links.append(f"[LinkedIn]({row['linkedin']})")
     if pd.notnull(row["cv"]):
-        if cols[-1].button("📄 CV", key=f"cv_{index}"):
-            st.markdown(f"[Download CV]({row['cv']})", unsafe_allow_html=True)
+        links.append(f"[CV]({row['cv']})")
+
+    cols[-1].markdown(" | ".join(links), unsafe_allow_html=True)
