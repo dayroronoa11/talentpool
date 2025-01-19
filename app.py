@@ -13,7 +13,7 @@ def fetch_data_talent():
     sheet = spreadsheet.sheet1
 
     # Specify expected headers in case there are duplicates in the actual sheet
-    expected_headers = ["name", "email", "universitas", "major", "whatsapp", "linkedin", "instagram", "cv", "code", "portofolio", "Status"]
+    expected_headers = ["name", "email", "universitas", "major", "whatsapp", "linkedin", "instagram", "cv", "code", "portofolio", "Status", "select_unit"]
 
     data = sheet.get_all_records(expected_headers=expected_headers)
 
@@ -28,7 +28,7 @@ def fetch_data_talent():
 
     return df_talent
 
-def update_status(index, new_status):
+def update_sheet(index, column_name, new_value):
     secret_info = st.secrets["sheets"]
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     creds = ServiceAccountCredentials.from_json_keyfile_dict(secret_info, scope)
@@ -36,16 +36,16 @@ def update_status(index, new_status):
     spreadsheet = client.open('Talent Pool Database')
     sheet = spreadsheet.sheet1
 
-    # Find the column index for "Status"
+    # Find the column index for the target column
     headers = sheet.row_values(1)  # Get the header row
-    if "Status" not in headers:
-        st.error("No 'Status' column found in the spreadsheet.")
+    if column_name not in headers:
+        st.error(f"No '{column_name}' column found in the spreadsheet.")
         return
 
-    status_col = headers.index("Status") + 1  # Convert to 1-based index
+    column_index = headers.index(column_name) + 1  # Convert to 1-based index
 
     # Update the corresponding cell
-    sheet.update_cell(index + 2, status_col, new_status)  # `index + 2` accounts for header and zero-indexing
+    sheet.update_cell(index + 2, column_index, new_value)  # index + 2 accounts for header and zero-indexing
 
 
 st.set_page_config(layout="wide")
@@ -71,10 +71,19 @@ for col, selected_value in selected_filters.items():
         filtered_df = filtered_df[filtered_df[col] == selected_value]
 
 # Columns to display in the editable table
-editable_columns = ["name", "email", "universitas", "major", "whatsapp", "Status"]
+editable_columns = ["name", "email", "universitas", "major", "whatsapp", "Status", "select_unit"]
 
 # Status options
 statuses = ["Open to Work", "Process in Unit", "Offering", "Hired"]
+
+# Select unit options
+unit_options = [
+    "GOMAN", "GORP", "DYANDRA", "KG PRO", "CHR", "CORCOMM", "CORCOMP", "CFL", "CORSEC", "CITIS",
+    "GOHR - AMARIS", "GOHR - GWS", "GOHR - KAMPI", "GOHR - KAYANA", "GOHR - SAMAYA", "GOHR - SANTIKA",
+    "GOHR - SANTIKA PREMIERE", "GOHR - THE ANVAYA", "KG MEDIA - HARKOM", "KG MEDIA - GRID", 
+    "KG MEDIA - TRIBUN", "KG MEDIA - KOMPAS.COM", "KG MEDIA - RADIO", "KG MEDIA - KONTAN", 
+    "KG MEDIA - KOMPAS TV", "KG MEDIA - TRANSITO", "YMN - UMN", "YMN - DIGITAL", "YMN - POLITEKNIK"
+]
 
 # Editable table layout
 st.subheader("Editable Table")
@@ -94,9 +103,8 @@ if not filtered_df.empty:
 else:
     st.info("No data available to download.")
 
-
 for index, row in filtered_df.iterrows():
-    cols = st.columns(len(editable_columns) + 1)  # +1 for the links column
+    cols = st.columns(len(editable_columns))  # Editable columns
     row_index = row["name"]  # Use name as the row identifier
 
     # Display columns with editable fields
@@ -104,16 +112,25 @@ for index, row in filtered_df.iterrows():
         if col_name == "Status":
             # Editable status dropdown
             current_status = row[col_name]
-
-            # Ensure current_status is valid or set it to a default status if invalid
             if current_status not in statuses:
                 current_status = "Open to Work"  # Default status
 
             new_status = cols[i].selectbox(f"Status for {row_index}", statuses, index=statuses.index(current_status), key=f"status_{index}")
             if new_status != current_status:
-                update_status(index, new_status)
+                update_sheet(index, "Status", new_status)
                 st.success(f"Status updated for {row_index} to {new_status}")
                 sleep(1)
+        elif col_name == "select_unit":
+            # Editable select_unit dropdown for specific statuses
+            if row["Status"] in ["Process in Unit", "Offering", "Hired"]:
+                current_unit = row[col_name] if row[col_name] in unit_options else None
+                new_unit = cols[i].selectbox(f"Select Unit for {row_index}", [""] + unit_options, index=unit_options.index(current_unit) + 1 if current_unit else 0, key=f"unit_{index}")
+                if new_unit != current_unit:
+                    update_sheet(index, "select_unit", new_unit)
+                    st.success(f"Unit updated for {row_index} to {new_unit}")
+                    sleep(1)
+            else:
+                cols[i].write("-")  # Show a placeholder if not applicable
         else:
             # Display other fields as text
             cols[i].write(row[col_name])
