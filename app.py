@@ -65,7 +65,7 @@ st.markdown(
 )
 
 df_talent = fetch_data_talent()
-st.header('Talent Pool Database', divider="blue")
+st.header('Talent Pool Database⭐️🫧🌀', divider="blue")
 
 # ========== 🔹 Summary Section ==========
 with st.expander("🔎Summary", expanded=True):
