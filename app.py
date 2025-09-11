@@ -19,10 +19,12 @@ def fetch_data_talent():
         return pd.DataFrame()
 
     df_talent = pd.DataFrame(data)
-    show_columns = ["code", "name", "universitas", "major", "pekerjaan", "posisi", "timestamp", "linkedin", "cv","Status","select_unit", "user"]
+    show_columns = ["code", "timestamp", "name", "universitas", "major", "pekerjaan", 
+                    "linkedin", "cv", "status", "select_unit", "user"]
+    
     for col in show_columns:
         if col not in df_talent.columns:
-            df_talent[col] = ""  # kalau belum ada, tambahin kolom kosong
+            df_talent[col] = ""  
 
     return df_talent[show_columns]
 
@@ -34,15 +36,12 @@ def update_sheet(index, column_name, new_value):
     spreadsheet = client.open('Talent Pool Database')
     sheet = spreadsheet.sheet1
 
-    # Find the column index for the target column
     headers = sheet.row_values(1)  
     if column_name not in headers:
         st.error(f"No '{column_name}' column found in the spreadsheet.")
         return
 
     column_index = headers.index(column_name) + 1 
-
-    # Update the corresponding cell
     sheet.update_cell(index + 2, column_index, new_value) 
 
 
@@ -56,98 +55,88 @@ with st.expander("🔎Summary", expanded=True):
     col1.dataframe(df_talent.groupby("code")["name"].count().reset_index().rename(columns={"name": "count"}))
     col2.dataframe(df_talent.groupby("universitas")["name"].count().reset_index().rename(columns={"name": "count"}))
     col3.dataframe(df_talent.groupby("major")["name"].count().reset_index().rename(columns={"name": "count"}))
-# Filter selection with 4 columns for better layout
+
+# ========== 🔹 Filter Section ==========
 filter_columns = ['name', 'code', 'universitas', 'major']
 selected_filters = {}
 
-# Create four columns for filter selection
-filter_columns_len = len(filter_columns)
 col1, col2, col3, col4 = st.columns(4)
 cols = [col1, col2, col3, col4]
 for idx, col in enumerate(cols):
-    if idx < filter_columns_len:
-        selected_filters[filter_columns[idx]] = col.selectbox(f"Filter by {filter_columns[idx]}", ['All'] + sorted(df_talent[filter_columns[idx]].unique().tolist()), key=filter_columns[idx])
+    if idx < len(filter_columns):
+        selected_filters[filter_columns[idx]] = col.selectbox(
+            f"Filter by {filter_columns[idx]}",
+            ['All'] + sorted(df_talent[filter_columns[idx]].unique().tolist()),
+            key=filter_columns[idx]
+        )
 
-# Apply filters
-filtered_df = df_talent
+filtered_df = df_talent.copy()
 for col, selected_value in selected_filters.items():
     if selected_value != 'All':
         filtered_df = filtered_df[filtered_df[col] == selected_value]
 
-
-
+# ========== 🔹 Talent List ==========
 st.write("Talent List")
-show_columns = ["code", "name", "universitas", "major", "pekerjaan", "posisi", "timestamp", "linkedin", "cv", "unit", "user"]
-statuses = ["Open to Work", "Process in Unit", "Offering", "Hired"]
-unit_options = [
-    "GOMAN", "GORP", "DYANDRA", "KG PRO", "CHR", "CORCOMM", "CORCOMP", "CFL", "CORSEC", "CITIS",
-    "GOHR - AMARIS", "GOHR - GWS", "GOHR - KAMPI", "GOHR - KAYANA", "GOHR - SAMAYA", "GOHR - SANTIKA",
-    "GOHR - SANTIKA PREMIERE", "GOHR - THE ANVAYA", "KG MEDIA - HARKOM", "KG MEDIA - GRID", 
-    "KG MEDIA - TRIBUN", "KG MEDIA - KOMPAS.COM", "KG MEDIA - RADIO", "KG MEDIA - KONTAN", 
-    "KG MEDIA - KOMPAS TV", "KG MEDIA - TRANSITO", "YMN - UMN", "YMN - DIGITAL", "YMN - POLITEKNIK"
-]
-
-
-
-st.write("Talent List")
-show_columns = ["code", "name", "universitas", "major", "pekerjaan", "posisi", "timestamp", "linkedin", "cv", "status", "unit", "user"]
 
 statuses = ["Open to Work", "Process in Unit", "Offering", "Hired"]
 unit_options = [
     "GOMAN", "GORP", "DYANDRA", "KG PRO", "CHR", "CORCOMM", "CORCOMP", "CFL", "CORSEC", "CITIS",
-    "GOHR", "HARKOM", "GRID", 
-    "TRIBUN", "KOMPAS.COM", "RADIO", "KONTAN", 
-    "KOMPAS TV", "TRANSITO", "YMN"
+    "GOHR", "HARKOM", "GRID", "TRIBUN", "KOMPAS.COM", "RADIO", 
+    "KONTAN", "KOMPAS TV", "TRANSITO", "YMN"
 ]
 
-# 🔹 Loop row by row
-for index, row in df_talent.iterrows():
-    st.markdown(f"**Row {index+1}**", unsafe_allow_html=True)  # judul tiap row
-    cols = st.columns(len(show_columns))
+for index, row in filtered_df.iterrows():
+    with st.container():
+        cols = st.columns(10)
 
-    for i, col_name in enumerate(show_columns):
-        if col_name == "status":
-            current_status = row[col_name] if row[col_name] in statuses else "Open to Work"
-            new_status = cols[i].selectbox(
-                f"{col_name} - {row['name']}",
-                statuses,
-                index=statuses.index(current_status),
-                key=f"status_{index}"
-            )
-            if new_status != current_status:
-                update_sheet(index, "status", new_status)
-                st.success(f"Status updated for {row['name']} → {new_status}")
-                sleep(1)
+        cols[0].write(row["code"])
+        cols[1].write(row["timestamp"])
+        cols[2].write(row["name"])
+        cols[3].write(row["universitas"])
+        cols[4].write(row["major"])
+        cols[5].write(row["pekerjaan"])
 
-        elif col_name == "unit":
-            current_unit = row[col_name] if row[col_name] in unit_options else ""
-            new_unit = cols[i].selectbox(
-                f"{col_name} - {row['name']}",
-                [""] + unit_options,
-                index=unit_options.index(current_unit) + 1 if current_unit else 0,
-                key=f"unit_{index}"
-            )
-            if new_unit != current_unit:
-                update_sheet(index, "unit", new_unit)
-                st.success(f"Unit updated for {row['name']} → {new_unit}")
-                sleep(1)
+        # Editable status
+        current_status = row["status"] if row["status"] in statuses else "Open to Work"
+        new_status = cols[6].selectbox(
+            "Status",
+            statuses,
+            index=statuses.index(current_status),
+            key=f"status_{index}"
+        )
+        if new_status != current_status:
+            update_sheet(index, "status", new_status)
+            st.success(f"Status updated for {row['name']} → {new_status}")
+            sleep(1)
 
-        elif col_name == "user":
-            current_user = row[col_name]
-            new_user = cols[i].text_input(
-                f"{col_name} - {row['name']}",
-                value=current_user,
-                key=f"user_{index}"
-            )
-            if new_user != current_user:
-                update_sheet(index, "user", new_user)
-                st.success(f"User updated for {row['name']} → {new_user}")
-                sleep(1)
+        # Editable unit
+        current_unit = row["select_unit"] if row["select_unit"] in unit_options else ""
+        new_unit = cols[7].selectbox(
+            "Select Unit",
+            [""] + unit_options,
+            index=unit_options.index(current_unit) + 1 if current_unit else 0,
+            key=f"unit_{index}"
+        )
+        if new_unit != current_unit:
+            update_sheet(index, "select_unit", new_unit)
+            st.success(f"Unit updated for {row['name']} → {new_unit}")
+            sleep(1)
 
-        elif col_name in ["linkedin", "cv"]:
-            if pd.notnull(row[col_name]) and row[col_name] != "":
-                cols[i].markdown(f"[{col_name.capitalize()}]({row[col_name]})", unsafe_allow_html=True)
-            else:
-                cols[i].write("-")
-        else:
-            cols[i].write(row[col_name])
+        # Editable user
+        current_user = row["user"]
+        new_user = cols[8].text_input(
+            "User",
+            value=current_user,
+            key=f"user_{index}"
+        )
+        if new_user != current_user:
+            update_sheet(index, "user", new_user)
+            st.success(f"User updated for {row['name']} → {new_user}")
+            sleep(1)
+
+        # LinkedIn + CV button
+        btn_col = cols[9]
+        if pd.notnull(row["linkedin"]) and row["linkedin"] != "":
+            btn_col.link_button("🔗 LinkedIn", row["linkedin"])
+        if pd.notnull(row["cv"]) and row["cv"] != "":
+            btn_col.link_button("📄 CV", row["cv"])
