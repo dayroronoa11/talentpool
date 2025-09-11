@@ -90,36 +90,45 @@ unit_options = [
     "KG MEDIA - KOMPAS TV", "KG MEDIA - TRANSITO", "YMN - UMN", "YMN - DIGITAL", "YMN - POLITEKNIK"
 ]
 
-for index, row in filtered_df.iterrows():
-    cols = st.columns(len(editable_columns))  # Editable columns
-    row_index = row["name"]  # Use name as the row identifier
+st.write("Talent List")
 
-    # Display columns with editable fields
+for index, row in filtered_df.iterrows():
+    st.markdown(f"### 🎯 {row['name']} ({row['code']})")  # 🔹 Judul row
+    
+    cols = st.columns(len(editable_columns))
+    row_index = row["name"]  
+
     for i, col_name in enumerate(editable_columns):
         if col_name == "Status":
-            # Editable status dropdown
             current_status = row[col_name]
             if current_status not in statuses:
-                current_status = "Open to Work"  # Default status
+                current_status = "Open to Work"  
 
-            new_status = cols[i].selectbox(f"Status for {row_index}", statuses, index=statuses.index(current_status), key=f"status_{index}")
+            new_status = cols[i].selectbox(
+                f"Status", statuses, 
+                index=statuses.index(current_status), 
+                key=f"status_{index}"
+            )
             if new_status != current_status:
                 update_sheet(index, "Status", new_status)
                 st.success(f"Status updated for {row_index} to {new_status}")
                 sleep(1)
+
         elif col_name == "select_unit":
-            # Editable select_unit dropdown for specific statuses
             if row["Status"] in ["Process in Unit", "Offering", "Hired"]:
                 current_unit = row[col_name] if row[col_name] in unit_options else None
-                new_unit = cols[i].selectbox(f"Select Unit for {row_index}", [""] + unit_options, index=unit_options.index(current_unit) + 1 if current_unit else 0, key=f"unit_{index}")
+                new_unit = cols[i].selectbox(
+                    f"Unit", [""] + unit_options, 
+                    index=unit_options.index(current_unit) + 1 if current_unit else 0, 
+                    key=f"unit_{index}"
+                )
                 if new_unit != current_unit:
                     update_sheet(index, "select_unit", new_unit)
                     st.success(f"Unit updated for {row_index} to {new_unit}")
                     sleep(1)
             else:
-                cols[i].write("-")  # Show a placeholder if not applicable
+                cols[i].write("-")  
         else:
-            # Display other fields as text
             cols[i].write(row[col_name])
 
     # Display hyperlinks for LinkedIn and CV
