@@ -51,7 +51,12 @@ def update_sheet(index, column_name, new_value):
 st.set_page_config(layout="wide")
 df_talent = fetch_data_talent()
 st.header('Talent Pool Database', divider="blue")
-
+# ========== 🔹 Summary Section ==========
+with st.expander("Summary by Code, Universitas, Jurusan", expanded=True):
+    col1, col2, col3 = st.columns(3)
+    col1.dataframe(df_talent.groupby("code")["name"].count().reset_index().rename(columns={"name": "count"}))
+    col2.dataframe(df_talent.groupby("universitas")["name"].count().reset_index().rename(columns={"name": "count"}))
+    col3.dataframe(df_talent.groupby("major")["name"].count().reset_index().rename(columns={"name": "count"}))
 # Filter selection with 4 columns for better layout
 filter_columns = ['name', 'code', 'universitas', 'major']
 selected_filters = {}
