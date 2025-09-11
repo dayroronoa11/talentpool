@@ -92,6 +92,7 @@ headers = ["Code", "Timestamp", "Name", "Universitas", "Major", "Pekerjaan",
 
 for i, h in enumerate(headers):
     header_cols[i].markdown(f"<div class='header-row'>{h}</div>", unsafe_allow_html=True)
+st.devider()
 
 for index, row in filtered_df.iterrows():
     with st.container():
