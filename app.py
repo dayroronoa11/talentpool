@@ -94,7 +94,7 @@ for col, selected_value in selected_filters.items():
         filtered_df = filtered_df[filtered_df[col] == selected_value]
 
 # ========== 🔹 Talent List ==========
-st.markdown("<span style='font-size:16px;'>✨ Talent List</span>", unsafe_allow_html=True)
+st.markdown("✨ **Talent List**")
 
 
 statuses = ["Open to Work", "Process in Unit", "Offering", "Hired"]
