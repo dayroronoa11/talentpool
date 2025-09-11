@@ -19,7 +19,7 @@ def fetch_data_talent():
         return pd.DataFrame()
 
     df_talent = pd.DataFrame(data)
-    show_columns = ["code", "name", "universitas", "major", "pekerjaan", "posisi", "timestamp", "linkedin", "cv", "unit", "user"]
+    show_columns = ["code", "name", "universitas", "major", "pekerjaan", "posisi", "timestamp", "linkedin", "cv","Status","select_unit", "user"]
     for col in show_columns:
         if col not in df_talent.columns:
             df_talent[col] = ""  # kalau belum ada, tambahin kolom kosong
