@@ -75,18 +75,6 @@ for col, selected_value in selected_filters.items():
         filtered_df = filtered_df[filtered_df[col] == selected_value]
 
 
-st.markdown("""
-    <style>
-        .stTable td, .stTable th {
-            border: 1px solid #ddd !important;
-            padding: 8px;
-        }
-        .stTable th {
-            background-color: #f2f2f2 !important;
-            text-align: center;
-        }
-    </style>
-""", unsafe_allow_html=True)
 
 st.write("Talent List")
 show_columns = ["code", "name", "universitas", "major", "pekerjaan", "posisi", "timestamp", "linkedin", "cv", "unit", "user"]
