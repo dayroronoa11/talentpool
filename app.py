@@ -85,6 +85,14 @@ unit_options = [
     "KONTAN", "KOMPAS TV", "TRANSITO", "YMN"
 ]
 
+# 🔹 Show header row
+header_cols = st.columns(10)
+headers = ["Code", "Timestamp", "Name", "Universitas", "Major", "Pekerjaan",
+           "Status", "Select Unit", "User", "Links"]
+
+for i, h in enumerate(headers):
+    header_cols[i].markdown(f"<div class='header-row'>{h}</div>", unsafe_allow_html=True)
+
 for index, row in filtered_df.iterrows():
     with st.container():
         cols = st.columns(10)
