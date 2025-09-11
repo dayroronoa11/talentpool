@@ -11,22 +11,20 @@ def fetch_data_talent():
     client = gspread.authorize(creds)
     spreadsheet = client.open('Talent Pool Database')
     sheet = spreadsheet.sheet1
-
-    # Specify expected headers in case there are duplicates in the actual sheet
-    expected_headers = editable_columns = ["code", "name", "universitas", "major", "Status", "select_unit", "user"]
-
-    data = sheet.get_all_records(expected_headers=expected_headers)
+    
+    data = sheet.get_all_records()
 
     if not data:
         st.error("No data found in the sheet.")
         return pd.DataFrame()
 
     df_talent = pd.DataFrame(data)
+    show_columns = ["code", "name", "universitas", "major", "pekerjaan", "posisi", "timestamp", "linkedin", "cv", "unit", "user"]
+    for col in show_columns:
+        if col not in df_talent.columns:
+            df_talent[col] = ""  # kalau belum ada, tambahin kolom kosong
 
-    # Ensure the DataFrame only contains the required columns
-    df_talent = df_talent[expected_headers]
-
-    return df_talent
+    return df_talent[show_columns]
 
 def update_sheet(index, column_name, new_value):
     secret_info = st.secrets["sheets"]
@@ -37,20 +35,21 @@ def update_sheet(index, column_name, new_value):
     sheet = spreadsheet.sheet1
 
     # Find the column index for the target column
-    headers = sheet.row_values(1)  # Get the header row
+    headers = sheet.row_values(1)  
     if column_name not in headers:
         st.error(f"No '{column_name}' column found in the spreadsheet.")
         return
 
-    column_index = headers.index(column_name) + 1  # Convert to 1-based index
+    column_index = headers.index(column_name) + 1 
 
     # Update the corresponding cell
-    sheet.update_cell(index + 2, column_index, new_value)  # index + 2 accounts for header and zero-indexing
+    sheet.update_cell(index + 2, column_index, new_value) 
 
 
 st.set_page_config(layout="wide")
 df_talent = fetch_data_talent()
 st.header('Talent Pool Database', divider="blue")
+
 # ========== 🔹 Summary Section ==========
 with st.expander("🔎Summary", expanded=True):
     col1, col2, col3 = st.columns(3)
@@ -75,13 +74,23 @@ for col, selected_value in selected_filters.items():
     if selected_value != 'All':
         filtered_df = filtered_df[filtered_df[col] == selected_value]
 
-# Columns to display in the editable table
-editable_columns = ["code","name", "universitas", "major", "Status", "select_unit"]
 
-# Status options
+st.markdown("""
+    <style>
+        .stTable td, .stTable th {
+            border: 1px solid #ddd !important;
+            padding: 8px;
+        }
+        .stTable th {
+            background-color: #f2f2f2 !important;
+            text-align: center;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+st.write("Talent List")
+show_columns = ["code", "name", "universitas", "major", "pekerjaan", "posisi", "timestamp", "linkedin", "cv", "unit", "user"]
 statuses = ["Open to Work", "Process in Unit", "Offering", "Hired"]
-
-# Select unit options
 unit_options = [
     "GOMAN", "GORP", "DYANDRA", "KG PRO", "CHR", "CORCOMM", "CORCOMP", "CFL", "CORSEC", "CITIS",
     "GOHR - AMARIS", "GOHR - GWS", "GOHR - KAMPI", "GOHR - KAYANA", "GOHR - SAMAYA", "GOHR - SANTIKA",
@@ -90,71 +99,47 @@ unit_options = [
     "KG MEDIA - KOMPAS TV", "KG MEDIA - TRANSITO", "YMN - UMN", "YMN - DIGITAL", "YMN - POLITEKNIK"
 ]
 
-st.write("Talent List")
 
-for index, row in filtered_df.iterrows():
-    cols = st.columns(len(editable_columns))  # bikin kolom sesuai editable_columns
-    row_index = row["name"]  
 
-    for i, col_name in enumerate(editable_columns):
-        if col_name == "Status":
-            # Editable status dropdown
-            current_status = row[col_name]
-            if current_status not in statuses:
-                current_status = "Open to Work"
+# 🔹 Loop row by row
+for index, row in df_talent.iterrows():
+    st.markdown(f"**Row {index+1}**", unsafe_allow_html=True)  # judul tiap row
+    cols = st.columns(len(df_talent.columns))
 
-            new_status = cols[i].selectbox(
-                f"Status for {row_index}", 
-                statuses, 
-                index=statuses.index(current_status), 
-                key=f"status_{index}"
+    for i, col_name in enumerate(df_talent.columns):
+        if col_name == "unit":
+            current_unit = row[col_name] if row[col_name] in unit_options else ""
+            new_unit = cols[i].selectbox(
+                f"{col_name} - {row['name']}",
+                [""] + unit_options,
+                index=unit_options.index(current_unit) + 1 if current_unit else 0,
+                key=f"unit_{index}"
             )
-            if new_status != current_status:
-                update_sheet(index, "Status", new_status)
-                st.success(f"Status updated for {row_index} to {new_status}")
-                sleep(1)
-
-        elif col_name == "select_unit":
-            # Editable select_unit dropdown
-            if row["Status"] in ["Process in Unit", "Offering", "Hired"]:
-                current_unit = row[col_name] if row[col_name] in unit_options else None
-                new_unit = cols[i].selectbox(
-                    f"Select Unit for {row_index}", 
-                    [""] + unit_options, 
-                    index=unit_options.index(current_unit) + 1 if current_unit else 0, 
-                    key=f"unit_{index}"
-                )
-                if new_unit != current_unit:
-                    update_sheet(index, "select_unit", new_unit)
-                    st.success(f"Unit updated for {row_index} to {new_unit}")
-                    sleep(1)
-            else:
-                cols[i].write("-")
-
-        elif col_name == "selected_unit":
-            # 🔹 Kolom baru: selected_unit (always editable dropdown)
-            current_selected = row[col_name] if row[col_name] in unit_options else None
-            new_selected = cols[i].selectbox(
-                f"Selected Unit for {row_index}", 
-                [""] + unit_options, 
-                index=unit_options.index(current_selected) + 1 if current_selected else 0, 
-                key=f"selected_unit_{index}"
-            )
-            if new_selected != current_selected:
-                update_sheet(index, "selected_unit", new_selected)
-                st.success(f"Selected Unit updated for {row_index} to {new_selected}")
+            if new_unit != current_unit:
+                update_sheet(index, "unit", new_unit)
+                st.success(f"Unit updated for {row['name']} → {new_unit}")
                 sleep(1)
 
         elif col_name == "user":
-            # 🔹 Kolom user (readonly, text aja)
-            if pd.notnull(row[col_name]):
-                cols[i].write(row[col_name])
+            current_user = row[col_name]
+            new_user = cols[i].text_input(
+                f"{col_name} - {row['name']}",
+                value=current_user,
+                key=f"user_{index}"
+            )
+            if new_user != current_user:
+                update_sheet(index, "user", new_user)
+                st.success(f"User updated for {row['name']} → {new_user}")
+                sleep(1)
+
+        elif col_name in ["linkedin", "cv"]:
+            if pd.notnull(row[col_name]) and row[col_name] != "":
+                cols[i].markdown(f"[{col_name.capitalize()}]({row[col_name]})", unsafe_allow_html=True)
             else:
                 cols[i].write("-")
-
         else:
-            # Kolom lain ditampilin sebagai text
             cols[i].write(row[col_name])
+    
 
     # Display hyperlinks for LinkedIn and CV
     links = []
