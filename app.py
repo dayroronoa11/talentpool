@@ -13,7 +13,7 @@ def fetch_data_talent():
     sheet = spreadsheet.sheet1
 
     # Specify expected headers in case there are duplicates in the actual sheet
-    expected_headers = ["name", "email", "universitas", "major", "whatsapp", "linkedin", "instagram", "cv", "code", "portofolio", "Status", "select_unit"]
+    expected_headers = editable_columns = ["code", "name", "universitas", "major", "Status", "select_unit", "user"]
 
     data = sheet.get_all_records(expected_headers=expected_headers)
 
@@ -93,19 +93,19 @@ unit_options = [
 st.write("Talent List")
 
 for index, row in filtered_df.iterrows():
-    st.markdown(f"### 🎯 {row['name']} ({row['code']})")  # 🔹 Judul row
-    
-    cols = st.columns(len(editable_columns))
+    cols = st.columns(len(editable_columns))  # bikin kolom sesuai editable_columns
     row_index = row["name"]  
 
     for i, col_name in enumerate(editable_columns):
         if col_name == "Status":
+            # Editable status dropdown
             current_status = row[col_name]
             if current_status not in statuses:
-                current_status = "Open to Work"  
+                current_status = "Open to Work"
 
             new_status = cols[i].selectbox(
-                f"Status", statuses, 
+                f"Status for {row_index}", 
+                statuses, 
                 index=statuses.index(current_status), 
                 key=f"status_{index}"
             )
@@ -115,10 +115,12 @@ for index, row in filtered_df.iterrows():
                 sleep(1)
 
         elif col_name == "select_unit":
+            # Editable select_unit dropdown
             if row["Status"] in ["Process in Unit", "Offering", "Hired"]:
                 current_unit = row[col_name] if row[col_name] in unit_options else None
                 new_unit = cols[i].selectbox(
-                    f"Unit", [""] + unit_options, 
+                    f"Select Unit for {row_index}", 
+                    [""] + unit_options, 
                     index=unit_options.index(current_unit) + 1 if current_unit else 0, 
                     key=f"unit_{index}"
                 )
@@ -127,8 +129,31 @@ for index, row in filtered_df.iterrows():
                     st.success(f"Unit updated for {row_index} to {new_unit}")
                     sleep(1)
             else:
-                cols[i].write("-")  
+                cols[i].write("-")
+
+        elif col_name == "selected_unit":
+            # 🔹 Kolom baru: selected_unit (always editable dropdown)
+            current_selected = row[col_name] if row[col_name] in unit_options else None
+            new_selected = cols[i].selectbox(
+                f"Selected Unit for {row_index}", 
+                [""] + unit_options, 
+                index=unit_options.index(current_selected) + 1 if current_selected else 0, 
+                key=f"selected_unit_{index}"
+            )
+            if new_selected != current_selected:
+                update_sheet(index, "selected_unit", new_selected)
+                st.success(f"Selected Unit updated for {row_index} to {new_selected}")
+                sleep(1)
+
+        elif col_name == "user":
+            # 🔹 Kolom user (readonly, text aja)
+            if pd.notnull(row[col_name]):
+                cols[i].write(row[col_name])
+            else:
+                cols[i].write("-")
+
         else:
+            # Kolom lain ditampilin sebagai text
             cols[i].write(row[col_name])
 
     # Display hyperlinks for LinkedIn and CV
