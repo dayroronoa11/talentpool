@@ -89,13 +89,37 @@ unit_options = [
 
 
 
+st.write("Talent List")
+show_columns = ["code", "name", "universitas", "major", "pekerjaan", "posisi", "timestamp", "linkedin", "cv", "status", "unit", "user"]
+
+statuses = ["Open to Work", "Process in Unit", "Offering", "Hired"]
+unit_options = [
+    "GOMAN", "GORP", "DYANDRA", "KG PRO", "CHR", "CORCOMM", "CORCOMP", "CFL", "CORSEC", "CITIS",
+    "GOHR", "HARKOM", "GRID", 
+    "TRIBUN", "KOMPAS.COM", "RADIO", "KONTAN", 
+    "KOMPAS TV", "TRANSITO", "YMN"
+]
+
 # 🔹 Loop row by row
 for index, row in df_talent.iterrows():
     st.markdown(f"**Row {index+1}**", unsafe_allow_html=True)  # judul tiap row
-    cols = st.columns(len(df_talent.columns))
+    cols = st.columns(len(show_columns))
 
-    for i, col_name in enumerate(df_talent.columns):
-        if col_name == "unit":
+    for i, col_name in enumerate(show_columns):
+        if col_name == "status":
+            current_status = row[col_name] if row[col_name] in statuses else "Open to Work"
+            new_status = cols[i].selectbox(
+                f"{col_name} - {row['name']}",
+                statuses,
+                index=statuses.index(current_status),
+                key=f"status_{index}"
+            )
+            if new_status != current_status:
+                update_sheet(index, "status", new_status)
+                st.success(f"Status updated for {row['name']} → {new_status}")
+                sleep(1)
+
+        elif col_name == "unit":
             current_unit = row[col_name] if row[col_name] in unit_options else ""
             new_unit = cols[i].selectbox(
                 f"{col_name} - {row['name']}",
@@ -127,13 +151,3 @@ for index, row in df_talent.iterrows():
                 cols[i].write("-")
         else:
             cols[i].write(row[col_name])
-    
-
-    # Display hyperlinks for LinkedIn and CV
-    links = []
-    if pd.notnull(row["linkedin"]):
-        links.append(f"[LinkedIn]({row['linkedin']})")
-    if pd.notnull(row["cv"]):
-        links.append(f"[CV]({row['cv']})")
-
-    cols[-1].markdown(" | ".join(links), unsafe_allow_html=True)
