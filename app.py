@@ -46,6 +46,24 @@ def update_sheet(index, column_name, new_value):
 
 
 st.set_page_config(layout="wide")
+# CSS styling
+st.markdown(
+    """
+    <style>
+    div[data-testid="stVerticalBlock"] div[data-testid="stHorizontalBlock"] {
+        font-size: 13px;  /* kecilin font */
+    }
+    .header-row {
+        font-weight: bold;
+        background-color: #f0f2f6;
+        padding: 6px 0;
+        border-bottom: 1px solid #ddd;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 df_talent = fetch_data_talent()
 st.header('Talent Pool Database', divider="blue")
 
@@ -76,7 +94,8 @@ for col, selected_value in selected_filters.items():
         filtered_df = filtered_df[filtered_df[col] == selected_value]
 
 # ========== 🔹 Talent List ==========
-st.write("Talent List")
+st.markdown("<span style='font-size:16px;'>✨ Talent List</span>", unsafe_allow_html=True)
+
 
 statuses = ["Open to Work", "Process in Unit", "Offering", "Hired"]
 unit_options = [
