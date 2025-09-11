@@ -71,7 +71,7 @@ for col, selected_value in selected_filters.items():
         filtered_df = filtered_df[filtered_df[col] == selected_value]
 
 # Columns to display in the editable table
-editable_columns = ["name", "email", "universitas", "major", "whatsapp", "Status", "select_unit"]
+editable_columns = ["code","name", "universitas", "major", "Status", "select_unit"]
 
 # Status options
 statuses = ["Open to Work", "Process in Unit", "Offering", "Hired"]
@@ -84,24 +84,6 @@ unit_options = [
     "KG MEDIA - TRIBUN", "KG MEDIA - KOMPAS.COM", "KG MEDIA - RADIO", "KG MEDIA - KONTAN", 
     "KG MEDIA - KOMPAS TV", "KG MEDIA - TRANSITO", "YMN - UMN", "YMN - DIGITAL", "YMN - POLITEKNIK"
 ]
-
-# Editable table layout
-st.subheader("Editable Table")
-
-# Add a download button for the filtered data
-if not filtered_df.empty:
-    # Convert the filtered DataFrame to CSV
-    csv_data = filtered_df.to_csv(index=False)
-    
-    # Add the download button
-    st.download_button(
-        label="📥 Download Filtered Data",
-        data=csv_data,
-        file_name="filtered_talent_data.csv",
-        mime="text/csv",
-    )
-else:
-    st.info("No data available to download.")
 
 for index, row in filtered_df.iterrows():
     cols = st.columns(len(editable_columns))  # Editable columns
