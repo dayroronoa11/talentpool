@@ -69,10 +69,12 @@ st.header('Talent Pool Database⭐️🫧🌀', divider="blue")
 
 # ========== 🔹 Summary Section ==========
 with st.expander("🔎Summary", expanded=True):
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4, col5 = st.columns(5)
     col1.dataframe(df_talent.groupby("code")["name"].count().reset_index().rename(columns={"name": "count"}))
     col2.dataframe(df_talent.groupby("universitas")["name"].count().reset_index().rename(columns={"name": "count"}))
     col3.dataframe(df_talent.groupby("major")["name"].count().reset_index().rename(columns={"name": "count"}))
+    col4.dataframe(df_talent.groupby("status")["name"].count().reset_index().rename(columns={"name": "count"}))
+    col5.dataframe(df_talent.groupby("pekerjaan")["name"].count().reset_index().rename(columns={"name": "count"}))
 
 # ========== 🔹 Filter Section ==========
 filter_columns = ['name', 'code', 'universitas', 'major']
