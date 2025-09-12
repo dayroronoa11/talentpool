@@ -20,7 +20,7 @@ def fetch_data_talent():
 
     df_talent = pd.DataFrame(data)
     show_columns = ["code", "timestamp", "name", "universitas", "major", "pekerjaan", 
-                    "linkedin", "cv", "Status", "select_unit", "user"]
+                    "linkedin", "cv", "status", "select_unit", "user"]
     
     for col in show_columns:
         if col not in df_talent.columns:
@@ -73,7 +73,7 @@ with st.expander("🔎Summary", expanded=True):
     col1.dataframe(df_talent.groupby("code")["name"].count().reset_index().rename(columns={"name": "count"}))
     col2.dataframe(df_talent.groupby("universitas")["name"].count().reset_index().rename(columns={"name": "count"}))
     col3.dataframe(df_talent.groupby("major")["name"].count().reset_index().rename(columns={"name": "count"}))
-    col4.dataframe(df_talent.groupby("Status")["name"].count().reset_index().rename(columns={"name": "count"}))
+    col4.dataframe(df_talent.groupby("status")["name"].count().reset_index().rename(columns={"name": "count"}))
     col5.dataframe(df_talent.groupby("pekerjaan")["name"].count().reset_index().rename(columns={"name": "count"}))
 
 # ========== 🔹 Filter Section ==========
@@ -127,7 +127,7 @@ for index, row in filtered_df.iterrows():
         cols[5].write(row["pekerjaan"])
 
         # Editable status
-        current_status = row["Status"] if row["status"] in statuses else "Open to Work"
+        current_status = row["status"] if row["status"] in statuses else "Open to Work"
         new_status = cols[6].selectbox(
             "Status",
             statuses,
@@ -135,7 +135,7 @@ for index, row in filtered_df.iterrows():
             key=f"status_{index}"
         )
         if new_status != current_status:
-            update_sheet(index, "Status", new_status)
+            update_sheet(index, "status", new_status)
             st.success(f"Status updated for {row['name']} → {new_status}")
             sleep(1)
 
