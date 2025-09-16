@@ -68,6 +68,11 @@ st.markdown(
 
 df_talent = fetch_data_talent()
 st.header('Talent Pool Database⭐️🫧🌀', divider="blue")
+# isi nilai kosong atau tidak dikenal dengan "Open to Work"
+df['status'] = df['status'].fillna('Open to Work')
+df['status'] = df['status'].replace({0: 'Open to Work'})  
+
+
 
 # ========== 🔹 Summary Section ==========
 with st.expander("🔎Summary", expanded=True):
