@@ -26,6 +26,8 @@ def fetch_data_talent():
         if col not in df_talent.columns:
             df_talent[col] = ""  
 
+    df_talent["status"] = df_talent["status"].replace("", "Open to Work")
+
     return df_talent[show_columns]
 
 def update_sheet(index, column_name, new_value):
