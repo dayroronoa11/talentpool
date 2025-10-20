@@ -4,6 +4,20 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
 
+@st.cache_data(ttl=86400)  
+def fetch_data_creds():
+    secret_info = st.secrets["sheets"]
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(secret_info, scope)
+    client = gspread.authorize(creds)
+    spreadsheet = client.open('Talent Pool Database')
+    sheet = spreadsheet.worksheet('creds')
+    data = sheet.get_all_records()
+    df_creds = pd.DataFrame(data)
+    return df_creds
+
+df_creds = fetch_data_creds()
+
 def fetch_data_talent():
     secret_info = st.secrets["sheets"]
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
