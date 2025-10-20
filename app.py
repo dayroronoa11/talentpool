@@ -3,8 +3,9 @@ from time import sleep
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
+import streamlit_authenticator as stauth
 
-@st.cache_data(ttl=86400)  
+@st.cache_data(ttl=86400)  # Cache for 1 day
 def fetch_data_creds():
     secret_info = st.secrets["sheets"]
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -16,7 +17,45 @@ def fetch_data_creds():
     df_creds = pd.DataFrame(data)
     return df_creds
 
+def extract_credentials(df_creds):
+    credentials = {
+        "credentials": {
+            "usernames": {}
+        },
+        "cookie": {
+            "name": "growth_center",
+            "key": "growth_2024",
+            "expiry_days": 30
+        }
+    }
+    for index, row in df_creds.iterrows():
+        credentials['credentials']['usernames'][row['username']] = {
+            'name': row['name'],
+            'password': row['password'],
+            'unit': row['unit'],
+            'email': row['email'],
+        }
+    return credentials
+
 df_creds = fetch_data_creds()
+credentials = extract_credentials(df_creds)
+
+# Authentication Setup
+authenticator = stauth.Authenticate(
+    credentials['credentials'],
+    credentials['cookie']['name'],
+    credentials['cookie']['key'],
+    credentials['cookie']['expiry_days']
+)
+
+# Display the login form
+authenticator.login('main', fields={'Form name': 'Hi!!! Welcome to Talent Pool Database'})
+
+# Handle authentication status
+if st.session_state['authentication_status']:
+    username = st.session_state['username']
+    user_email = credentials['credentials']['usernames'][username]['email']
+    user_name = credentials['credentials']['usernames'][username]['name']
 
 def fetch_data_talent():
     secret_info = st.secrets["sheets"]
