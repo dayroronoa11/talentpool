@@ -5,7 +5,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
 import streamlit_authenticator as stauth
 
-@st.cache_data(ttl=86400)  # Cache for 1 day
+@st.cache_data(ttl=86400)  
 def fetch_data_creds():
     secret_info = st.secrets["sheets"]
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -28,34 +28,45 @@ def extract_credentials(df_creds):
             "expiry_days": 30
         }
     }
-    for index, row in df_creds.iterrows():
+
+    # Loop over each row to fill credentials
+    for _, row in df_creds.iterrows():
         credentials['credentials']['usernames'][row['username']] = {
-            'name': row['name'],
-            'password': row['password'],
-            'unit': row['unit'],
-            'email': row['email'],
+            'name': row['username'],     
+            'password': row['password'], 
+            'email': row['email']        
         }
+
     return credentials
 
-df_creds = fetch_data_creds()
+
+# Extract credentials from df_creds
 credentials = extract_credentials(df_creds)
 
 # Authentication Setup
 authenticator = stauth.Authenticate(
-    credentials['credentials'],
-    credentials['cookie']['name'],
-    credentials['cookie']['key'],
-    credentials['cookie']['expiry_days']
+    credentials['credentials'],          
+    credentials['cookie']['name'],   
+    credentials['cookie']['key'],        
+    credentials['cookie']['expiry_days'],  
+    auto_hash=False                        
 )
 
-# Display the login form
-authenticator.login('main', fields={'Form name': 'Hi!!! Welcome to Talent Pool Database'})
+# Display login form
+authenticator.login('main', fields={'Form name': 'Hello! Welcome to Talent Pool Database'})
 
-# Handle authentication status
-if st.session_state['authentication_status']:
+# Handle authentication
+if st.session_state.get('authentication_status'):
+    st.session_state['logged_in'] = True
     username = st.session_state['username']
+
+    # Retrieve user info
     user_email = credentials['credentials']['usernames'][username]['email']
     user_name = credentials['credentials']['usernames'][username]['name']
+
+    st.success(f"Welcome {user_name}!")
+    st.write(f"📧 Email: {user_email}")
+
 
 def fetch_data_talent():
     secret_info = st.secrets["sheets"]
