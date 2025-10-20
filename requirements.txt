@@ -2,3 +2,4 @@ gspread
 pandas
 streamlit
 oauth2client
+streamlit_authenticator
