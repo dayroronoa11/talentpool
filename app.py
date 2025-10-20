@@ -40,10 +40,9 @@ def extract_credentials(df_creds):
     return credentials
 
 
-# Extract credentials from df_creds
+df_creds = fetch_data_creds()
 credentials = extract_credentials(df_creds)
 
-# Authentication Setup
 authenticator = stauth.Authenticate(
     credentials['credentials'],          
     credentials['cookie']['name'],   
@@ -52,8 +51,8 @@ authenticator = stauth.Authenticate(
     auto_hash=False                        
 )
 
-# Display login form
 authenticator.login('main', fields={'Form name': 'Hello! Welcome to Talent Pool Database'})
+
 
 # Handle authentication
 if st.session_state.get('authentication_status'):
