@@ -73,8 +73,7 @@ authenticator = stauth.Authenticate(
     credentials['credentials'],
     credentials['cookie']['name'],
     credentials['cookie']['key'],
-    credentials['cookie']['expiry_days'],
-    auto_hash=False
+    credentials['cookie']['expiry_days']
 )
 
 authenticator.login('main', fields={'Form name': 'Hello!ヾ( ˃ᴗ˂ )◞ • *✰ Welcome to Talent Pool Database'})
