@@ -50,7 +50,7 @@ def fetch_data_talent():
 def extract_credentials(df_creds):
     credentials = {
         "credentials": {"usernames": {}},
-        "cookie": {"name": "growth_center_v2", "key": "growth_2024_v2", "expiry_days": 30}
+        "cookie": {"name": "growth_center", "key": "growth_2024", "expiry_days": 30}
     }
 
     for _, row in df_creds.iterrows():
@@ -73,10 +73,11 @@ authenticator = stauth.Authenticate(
     credentials['credentials'],
     credentials['cookie']['name'],
     credentials['cookie']['key'],
-    credentials['cookie']['expiry_days']
+    credentials['cookie']['expiry_days'],
+    auto_hash=False
 )
 
-name, authentication_status, username = authenticator.login('main')
+authenticator.login('main', fields={'Form name': 'Hello!ヾ( ˃ᴗ˂ )◞ • *✰ Welcome to Talent Pool Database'})
 
 # ================== LOGIN CHECK ==================
 if st.session_state.get('authentication_status'):
@@ -128,8 +129,7 @@ if st.session_state.get('authentication_status'):
     """, unsafe_allow_html=True)
 
     # ========== MAIN CONTENT ==========
-    st.header('Talent Pool Database⭐️🫧🌀')
-    st.divider()
+    st.header('Talent Pool Database⭐️🫧🌀', divider="blue")
 
     # ----- SUMMARY -----
     with st.expander("🔎Summary", expanded=True):
