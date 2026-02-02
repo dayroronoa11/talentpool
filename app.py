@@ -128,7 +128,8 @@ if st.session_state.get('authentication_status'):
     """, unsafe_allow_html=True)
 
     # ========== MAIN CONTENT ==========
-    st.header('Talent Pool Database⭐️🫧🌀', divider="blue")
+    st.header('Talent Pool Database⭐️🫧🌀')
+    st.divider()
 
     # ----- SUMMARY -----
     with st.expander("🔎Summary", expanded=True):
