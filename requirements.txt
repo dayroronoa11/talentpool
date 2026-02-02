@@ -2,6 +2,6 @@ gspread
 pandas
 streamlit
 oauth2client
-streamlit-authenticator==0.3.2
+streamlit-authenticator
 altair==4.2.2
 
