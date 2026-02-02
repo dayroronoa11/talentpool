@@ -76,7 +76,7 @@ authenticator = stauth.Authenticate(
     credentials['cookie']['expiry_days']
 )
 
-authenticator.login('main', fields={'Form name': 'Hello!ヾ( ˃ᴗ˂ )◞ • *✰ Welcome to Talent Pool Database'})
+name, authentication_status, username = authenticator.login('main')
 
 # ================== LOGIN CHECK ==================
 if st.session_state.get('authentication_status'):
